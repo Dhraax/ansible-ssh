@@ -1,0 +1,12 @@
+- hosts: host
+  become: true
+  vars:
+    user_names:
+      - 'User'
+  tasks:
+    - name: Remove Users
+      user:
+        name: '{{ item }}'
+        state: absent
+        remove: yes
+      loop: "{{ user_names }}"

@@ -1,0 +1,71 @@
+---
+- hosts: "localhost"
+  become: true
+  vars_files:
+  #  - vars/users/temporal-list.yml
+    - vars/users/infra.yml
+  #  - vars/users/developer.yml
+  #  - vars/users/services.yml
+  #  - vars/users/delete.yml
+  tasks:
+#  - include: vars/ssh-settings/ssh-onlykey.yml
+  - name: Create admin group
+    group: name={{ admin_group }} state=present
+  - name: Loading Users
+    user:
+      name: "{{ item.username }}"
+      state: "{{ item.state | default('present') }}"
+      shell: "{{ item.shell | default('/bin/bash') }}"
+      group: "{{ admin_group }}"
+      remove: yes
+    when: item.username is defined
+    with_items:
+      - "{{ company_admin_list }}"
+
+  - name: Add SSH-keys to Users
+    authorized_key:
+      user: "{{ item.0.username }}"
+      key: "{{ item.1 }}"
+    with_subelements:
+      - "{{ company_admin_list }}"
+      - keys.active
+      - flags:
+        skip_missing: True 
+    when: item.0.state != "absent"
+    notify:
+    - restart ssh 
+
+  - name: Remove old SSH-keys
+    authorized_key:
+      user: "{{ item.0.username }}"
+      key: "{{ item.1 }}"
+      state: absent
+    with_subelements:
+      - "{{ company_admin_list }}"
+      - keys.disabled
+      - flags:
+        skip_missing: True
+    when: item.0.state != "absent"
+
+  - name: Copy of id_rsa
+    copy: 
+      src: keys/authorized_keys
+      dest: "/root/.ssh/authorized_keys" 
+      mode: 0600
+    with_subelements:
+      - "{{ company_admin_list }}"
+      - keys.active
+      - flags:
+        skip_missing: True 
+    when: item.0.state != "absent"
+
+#  - name: add admin group to sudoers
+#    lineinfile: dest=/etc/sudoers regexp="^%{{ admin_group }}" line="%{{ admin_group }} ALL=(ALL) NOPASSWD:ALL"
+
+  - name: Desabilitar Requiretty de sudoers
+    lineinfile: dest=/etc/sudoers regexp="Defaults    requiretty" line="#Defaults    requiretty"
+
+  handlers:
+    - name: restart ssh
+      service: name=sshd state=restarted
+...

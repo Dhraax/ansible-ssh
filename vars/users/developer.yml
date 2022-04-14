@@ -1,0 +1,16 @@
+company_admin_list:
+  # USER NAME
+  - name: "Name Lastname"
+    username: "user"
+  # KEY
+    keys:
+      active:
+        - ""
+  # KEY TO REMOVE/CHANGE
+      disabled:
+        - ""
+    shell: "/bin/bash"
+    state: present
+
+# GROUP
+admin_group: developer

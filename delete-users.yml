@@ -1,0 +1,19 @@
+---
+- hosts: "host"
+  become: true
+  vars_files:
+    - vars/users/delete.yml
+  tasks:
+  - name: Delete Users
+    user:
+      name: "{{ item.username }}"
+      state: absent
+      remove: yes
+    when: item.username is defined
+    with_items:
+      - "{{ company_admin_list }}"
+
+  handlers:
+    - name: restart ssh
+      service: name=ssh state=restarted
+...

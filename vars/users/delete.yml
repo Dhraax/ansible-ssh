@@ -1,0 +1,7 @@
+# Estados: present para los que seran creados state para los que seran removidos.
+company_admin_list:
+
+  # USUARIOS A REMOVER
+  - name: "delete usuarios"
+    username: ""
+    state: absent
